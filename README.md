@@ -15,7 +15,7 @@
   A robust licence plate detection and recognition framework for Bolivian vehicles under real-world conditions.
 </p>
 
-**Authors:** [Guillermo Auza](https://www.linkedin.com/in/guillermo-j-auza-banegas/), [Sergio Castro](https://www.linkedin.com/in/sergio-s-castro-sandoval/), [Diego Calvimontes](https://www.linkedin.com/in/diego-a-calvimontes-vera/), [Natalia Condori](https://www.linkedin.com/in/natalia-l-condori-peredo/),  and [Edwin Salcedo](https://www.linkedin.com/in/edwinsalcedo)
+**Authors:** [Guillermo Auza](https://www.linkedin.com/in/guillermo-a-358247253/), [Sergio Castro](https://www.linkedin.com/in/sergio-castro-sandoval-663a78347/), [Diego Calvimontes](https://www.linkedin.com/in/calvimontes-diego/), [Natalia Condori](https://www.linkedin.com/in/natalia-condori-864520287/),  and [Edwin Salcedo](https://www.linkedin.com/in/edwinsalcedo)
 
 ## Introduction
 
