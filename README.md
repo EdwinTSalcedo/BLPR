@@ -2,17 +2,13 @@
 
 <p align="center">
   <a href="">
-    <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper">
-  </a>
+    <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper"></a>
   <a href="">
-    <img src="https://img.shields.io/badge/arXiv-2508.04663-b31b1b" alt="arXiv">
-  </a>
+    <img src="https://img.shields.io/badge/arXiv-2508.04663-b31b1b" alt="arXiv"></a>
   <a href="">
-    <img src="https://img.shields.io/badge/Dataset-Page-blue" alt="Dataset Page">
-  </a>
+    <img src="https://img.shields.io/badge/Dataset-Page-blue" alt="Dataset Page"></a>
   <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache%202.0-green" alt="License">
-  </a>
+    <img src="https://img.shields.io/badge/License-Apache%202.0-green" alt="License"></a>
 </p>
 
 <p align="center">
