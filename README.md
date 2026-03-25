@@ -1,25 +1,42 @@
-# Robust License Plate Recognition Under Viewpoint and Illumination Variations: A Bolivian Case Study
-This repository contains the official implementation of the Bolivian license plate recognition (BLPR) framework, designed to operate robustly under perspective distortions and extreme illumination variations. The system uses a two-stage pipeline based on YOLOv11 and YOLOv8x, with an innovative fallback mechanism powered by Llama 3.2.
+<h1 align="center">BLPR: Robust License Plate Recognition Under Viewpoint and Illumination Variations</h1>
 
-## 🚀 Key Features
+<p align="center">
+  <a href="">
+    <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper">
+  </a>
+  <a href="">
+    <img src="https://img.shields.io/badge/arXiv-2508.04663-b31b1b" alt="arXiv">
+  </a>
+  <a href="">
+    <img src="https://img.shields.io/badge/Dataset-Page-blue" alt="Dataset Page">
+  </a>
+  <a href="./LICENSE">
+    <img src="https://img.shields.io/badge/License-Apache%202.0-green" alt="License">
+  </a>
+</p>
 
-- **Two-Stage Detection:** Uses YOLOv11n for vehicle/license plate localization and YOLOv8x for optical character recognition (OCR).
+<p align="center">
+  A robust licence plate detection and recognition framework for Bolivian vehicles under real-world conditions.
+</p>
 
+**Authors:** [Guillermo Auza](https://www.linkedin.com/in/guillermo-j-auza-banegas/), [Sergio Castro](https://www.linkedin.com/in/sergio-s-castro-sandoval/), [Diego Calvimontes](https://www.linkedin.com/in/diego-a-calvimontes-vera/), [Natalia Condori](https://www.linkedin.com/in/natalia-l-condori-peredo/),  and [Edwin Salcedo](https://www.linkedin.com/in/edwinsalcedo)
 
-- **Perspective Rectification:** A preprocessing algorithm that corrects tilted or distorted plates using perspective transformations and Canny edge detection.
+## Introduction
 
+Vehicle identity verification remains a major challenge in Latin America, contributing to rising cases of stolen vehicles, duplicated plates, and illegal transit. In countries such as Bolivia, the problem is exacerbated by the lack of technological infrastructure and publicly available datasets tailored to local conditions.
 
-- **Illumination Enhancement:** Dynamic luminance adjustment (CLAHE for low light and gamma correction for overexposure) before recognition.
+Automatic Licence Plate Detection and Recognition (LPDR) systems provide a scalable solution, but their performance is still limited under real-world conditions, particularly due to viewpoint and illumination variations. Additionally, most existing datasets do not explicitly account for these factors, and there is a notable absence of data from underrepresented regions such as the Andean context.
 
+## This Repository
 
-- **LLM Fallback:** Llama 3.2 integration to infer characters in cases of low confidence (confidence < 0.5) or inconsistent formats.
+This repository contains the official implementation of the Bolivian license plate recognition (BLPR) framework, designed to operate robustly under perspective distortions and extreme illumination variations. The system uses a two-stage pipeline based on YOLOv11 and YOLOv8x, with an innovative fallback mechanism powered by Llama 3.2. The main components are:
 
+- **BLPR Dataset** with explicit categorisation by viewpoint and illumination  
+- **Detection & Rectification Pipeline** based on YOLOv11n for accurate localisation and preprocessing  
+- **Hybrid OCR Module** combining YOLOv8x with Llama 3.2 for improved recognition under ambiguity  
 
-- **BLPR Dataset:** Introduction of the first specialized dataset for Bolivian license plates, including more than 49,000 synthetic images and real samples from La Paz.
-
-## 🏗️ System Architecture
-The pipeline processes images as follows:
-
+## Framework Overview
+The framework processes images as follows:
 
 1. **Detection:** YOLOv11n locates the vehicle and the license plate.
 
@@ -33,16 +50,45 @@ The pipeline processes images as follows:
 
 6. **Validation and Fallback:** If OCR fails or is unreliable, a local Llama 3.2 instance is queried using a base64 prompt.
 
-## 📊 Performance
-The system achieves 88.4% character-level accuracy on real street images under uncontrolled conditions.
+<p align="center"><img src="./images/pipeline.jpg" width="90%"></p>
 
-| Model    | Task                                      | IoU    | F1-Score | Inference Time       |
-|----------|-------------------------------------------|--------|----------|----------------------|
-| YOLOv11n | Detection (LPD)                           | 0.7639 | 0.8682   | 3.62 ms              |
-| YOLOv8x  | Optical character recognition (LPR)       | 0.9458 | 0.9837   | 29.74 ms             |
 
-## 📂 BLPR Datasets
-Four sub-datasets were developed for this study:
+## Getting Started
+
+- [Installation](#installation)
+- [Inference](#inference)
+- [Dataset](#blpr-dataset)
+- [Evaluation](#evaluation)
+- [Project Structure](#project-structure)
+- [Citation](#citation)
+
+## Installation
+
+```bash
+git clone --recursive git@github.com:EdwinTSalcedo/BLPR.git bplr
+cd bplr
+```
+
+**Option 1: Using requirements.txt**
+
+```bash
+conda create -n bplr python=3.11
+conda activate bplr
+pip install -r requirements.txt
+```
+
+**Option 2: Using pyproject.toml**
+
+```bash
+conda create -n bplr python=3.11
+conda activate bplr
+pip install -e .
+```
+
+## Inference
+
+## BLPR Dataset
+The BLPR dataset consists of four sub-datasets:
 | Dataset | Samples  | Type      | Description                                                                          |
 |---------|----------|-----------|--------------------------------------------------------------------------------------|
 | BLPR-A  | 3,550    | Real      | Street photos from La Paz with vehicle and license plate annotations.                |
@@ -50,9 +96,25 @@ Four sub-datasets were developed for this study:
 | BLPR-C  | 1,374    | Real/Aug  | Individual plates for OCR training with class balancing.                             |
 | BLPR-D  | 499      | Real      | Validation dataset with luminance (lux) data and real perspective conditions.        |
 
-## 📝 References and Authors
-This work was presented in IEEE Latin America Transactions.
+## Evaluation
 
-* **Authors:** Guillermo J. Auza Banegas, Sergio S. Castro Sandoval, Diego A. Calvimontes Vera, Natalia L. Condori Peredo, and Edwin Salcedo.
+The system achieves 88.4% character-level accuracy on real street images under uncontrolled conditions.
 
-* **Institution:** Universidad Católica Boliviana "San Pablo" and Queen Mary University of London.
+| Model    | Task                                      | IoU    | F1-Score | Inference Time       |
+|----------|-------------------------------------------|--------|----------|----------------------|
+| YOLOv11n | Detection (LPD)                           | 0.7639 | 0.8682   | 3.62 ms              |
+| YOLOv8x  | Optical character recognition (LPR)       | 0.9458 | 0.9837   | 29.74 ms             |
+
+## Project Structure
+
+## Citation
+
+If you find this work useful, please cite our paper:
+
+```bibtex
+@article{auza_banegas2026,
+  title   = {Robust License Plate Recognition Under Viewpoint and Illumination Variations: A Bolivian Case Study},
+  author  = {Auza Banegas, Guillermo J. and Castro Sandoval, Sergio S. and Calvimontes Vera, Diego A. and Condori Peredo, Natalia L. and Salcedo, Edwin},
+  journal = {IEEE Latin America Transactions}
+}
+```
