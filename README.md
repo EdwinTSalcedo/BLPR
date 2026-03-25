@@ -1,58 +1,58 @@
 # Robust License Plate Recognition Under Viewpoint and Illumination Variations: A Bolivian Case Study
-Este repositorio contiene la implementación oficial del framework de reconocimiento de placas bolivianas (BLPR), diseñado para operar de manera robusta ante distorsiones de perspectiva y variaciones extremas de iluminación. El sistema utiliza un pipeline de dos etapas basado en YOLOv11 y YOLOv8x, con un innovador mecanismo de respaldo (fallback) mediante Llama 3.2.
+This repository contains the official implementation of the Bolivian license plate recognition (BLPR) framework, designed to operate robustly under perspective distortions and extreme illumination variations. The system uses a two-stage pipeline based on YOLOv11 and YOLOv8x, with an innovative fallback mechanism powered by Llama 3.2.
 
-## 🚀 Características Principales
+## 🚀 Key Features
 
-- **Detección de Dos Etapas:** Utiliza YOLOv11n para la localización de vehículos/placas y YOLOv8x para el reconocimiento de caracteres (OCR).
-
-
-- **Rectificación de Perspectiva:** Algoritmo de preprocesamiento que corrige placas inclinadas o deformadas mediante transformaciones de perspectiva y detección de bordes Canny.
+- **Two-Stage Detection:** Uses YOLOv11n for vehicle/license plate localization and YOLOv8x for optical character recognition (OCR).
 
 
-- **Mejora de Iluminación:** Ajuste dinámico de luminancia (CLAHE para baja luz y corrección gamma para sobreexposición) antes del reconocimiento.
+- **Perspective Rectification:** A preprocessing algorithm that corrects tilted or distorted plates using perspective transformations and Canny edge detection.
 
 
-- **LLM Fallback:** Integración de Llama 3.2 para inferir caracteres en casos de baja confianza (confianza < 0.5) o formatos inconsistentes.
+- **Illumination Enhancement:** Dynamic luminance adjustment (CLAHE for low light and gamma correction for overexposure) before recognition.
 
 
-- **Dataset BLPR:** Introducción del primer dataset especializado en placas bolivianas, incluyendo más de 49,000 imágenes sintéticas y muestras reales de La Paz.
-
-## 🏗️ Arquitectura del Sistema
-El pipeline procesa las imágenes de la siguiente manera:
+- **LLM Fallback:** Llama 3.2 integration to infer characters in cases of low confidence (confidence < 0.5) or inconsistent formats.
 
 
-1. **Detección:** YOLOv11n localiza el vehículo y la placa.
+- **BLPR Dataset:** Introduction of the first specialized dataset for Bolivian license plates, including more than 49,000 synthetic images and real samples from La Paz.
 
-2. **Preprocesamiento:** Se valida que la placa esté dentro del vehículo y se extrae el ROI con un margen de 10 píxeles.
+## 🏗️ System Architecture
+The pipeline processes images as follows:
 
-3. **Normalización de Iluminación:** El ROI se convierte a espacio YUV para evaluar la luminancia media y aplicar mejoras según el umbral.
 
-4. **Rectificación:** Se binariza la imagen y se detectan los bordes para aplicar una transformación de perspectiva.
+1. **Detection:** YOLOv11n locates the vehicle and the license plate.
 
-5. **OCR Primario:** YOLOv8x realiza el reconocimiento de caracteres.
+2. **Preprocessing:** The system validates that the plate is within the vehicle and extracts the ROI with a 10-pixel margin.
 
-6. **Validación y Fallback:** Si el OCR falla o es poco confiable, se consulta a una instancia local de Llama 3.2 mediante un prompt base64.
+3. **Illumination Normalization:** The ROI is converted to YUV space to evaluate average luminance and apply enhancements based on the threshold.
 
-## 📊 Rendimiento
-El sistema logra una precisión a nivel de caracteres del 88.4% en imágenes reales de calle bajo condiciones no controladas.
+4. **Rectification:** The image is binarized and edges are detected to apply a perspective transformation.
 
-| Modelo   | Tarea                                     | IoU    | F1-Score | Tiempo de Inferencia |
+5. **Primary OCR:** YOLOv8x performs character recognition.
+
+6. **Validation and Fallback:** If OCR fails or is unreliable, a local Llama 3.2 instance is queried using a base64 prompt.
+
+## 📊 Performance
+The system achieves 88.4% character-level accuracy on real street images under uncontrolled conditions.
+
+| Model    | Task                                      | IoU    | F1-Score | Inference Time       |
 |----------|-------------------------------------------|--------|----------|----------------------|
-| YOLOv11n | Detección (LPD)                           | 0,7639 | 0.8682   | 3,62 ms              |
-| Yolov8x  | Reconocimiento óptico de caracteres (LPR) | 0.9458 | 0.9837   | 29,74 ms             |
+| YOLOv11n | Detection (LPD)                           | 0.7639 | 0.8682   | 3.62 ms              |
+| YOLOv8x  | Optical character recognition (LPR)       | 0.9458 | 0.9837   | 29.74 ms             |
 
-## 📂 Datasets BLPR
-Se desarrollaron cuatro sub-datasets para este estudio:
-| Dataset | Muestras | Tipo      | Descripción                                                                          |
+## 📂 BLPR Datasets
+Four sub-datasets were developed for this study:
+| Dataset | Samples  | Type      | Description                                                                          |
 |---------|----------|-----------|--------------------------------------------------------------------------------------|
-| BLPR-A  | 3,550    | Real      | Fotos de calles en La Paz con anotaciones de vehículos y placas.                     |
-| BLPR-B  | 49.392   | Sintético | Creado en Blender con variaciones de clima y ángulos de 30° a 150°.                  |
-| BLPR-C  | 1.374    | Real/Aug  | Placas individuales para entrenamiento de OCR con balanceo de clases.                |
-| BLPR-D  | 499      | Real      | Conjunto de datos de validación con datos de luminancia (lux) y perspectivas reales. |
+| BLPR-A  | 3,550    | Real      | Street photos from La Paz with vehicle and license plate annotations.                |
+| BLPR-B  | 49,392   | Synthetic | Created in Blender with weather variations and angles from 30 degrees to 150 degrees.|
+| BLPR-C  | 1,374    | Real/Aug  | Individual plates for OCR training with class balancing.                             |
+| BLPR-D  | 499      | Real      | Validation dataset with luminance (lux) data and real perspective conditions.        |
 
-## 📝 Referencias y Autores
-Este trabajo fue presentado en IEEE Latin America Transactions.
+## 📝 References and Authors
+This work was presented in IEEE Latin America Transactions.
 
-* **Autores:** Guillermo J. Auza Banegas, Sergio S. Castro Sandoval, Diego A. Calvimontes Vera, Natalia L. Condori Peredo y Edwin Salcedo.
+* **Authors:** Guillermo J. Auza Banegas, Sergio S. Castro Sandoval, Diego A. Calvimontes Vera, Natalia L. Condori Peredo, and Edwin Salcedo.
 
-* **Institución:** Universidad Católica Boliviana "San Pablo" y Queen Mary University of London.
+* **Institution:** Universidad Católica Boliviana "San Pablo" and Queen Mary University of London.
