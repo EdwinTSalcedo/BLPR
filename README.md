@@ -81,6 +81,19 @@ conda activate bplr
 pip install -e .
 ```
 
+##Datasets:
+**BLPR-A:**
+`https://universe.roboflow.com/bolivianlpdauzaetal/final-lpd`
+
+**BLPR-B:**
+``
+
+**BLPR-C:**
+`https://universe.roboflow.com/bolivianlprauzaetal/bolivian_lpr_balanced_augmented`
+
+**BLPR_D:**
+``
+
 ## Inference
 
 ## BLPR Dataset
