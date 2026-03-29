@@ -10,23 +10,27 @@ from agno.agent import Agent
 from agno.models.ollama import Ollama
 from agno.media import Image as AgnoImage
 
+
 DATASET_FOLDER = 'dataset'
 LABELS_FILE = 'labels.csv' 
-CONFIDENCE_THRESHOLD = 0.2
+CONFIDENCE_THRESHOLD = 0.15
 IGNORED_STRINGS = ["BOLIVIA", "_"]
 
-CHAR_MODEL_1 = "best_lpr.pt"
-CHAR_MODEL_2 = "best_lpr_4.pt"
+RUN_DUAL_OCR = False
+
+CHAR_MODEL_2 = "best_lpr_5.pt"
+CHAR_MODEL_1 = "best_lpr_5.pt"
 PLATE_MODEL = "best_lpd.pt"
 
 MIN_CHARS_THRESHOLD = 6        
-CONF_DROP_RATIO = 0.70         
+CONF_DROP_RATIO = 0.3         
 LLM_GEMA_ID = "gemma3:4b"
 
 VALID_DISTANCES = {"CERCA", "MEDIO"}
 VALID_ANGLES = {"NORMAL", "INCLINADO", "PRONUNCIADO"}
 CONFIGS = ["Raw", "No_Illum", "No_Skew", "No_LLM", "Full"]
-MODELS = ["OCR_1", "OCR_2"]
+
+MODELS = ["OCR_2", "OCR_1"] if RUN_DUAL_OCR else ["OCR_2"]
 
 LLM_SYS_DESCRIPTION = "You are a precise License Plate Recognition system."
 LLM_SYS_INSTRUCTIONS = [
@@ -39,8 +43,9 @@ init(autoreset=True)
 
 print(f"{Fore.YELLOW}Loading YOLO Models...{Style.RESET_ALL}")
 plate_model = YOLO(PLATE_MODEL, task='detect') 
-char_model_1 = YOLO(CHAR_MODEL_1, task='detect')
 char_model_2 = YOLO(CHAR_MODEL_2, task='detect')
+if RUN_DUAL_OCR:
+    char_model_1 = YOLO(CHAR_MODEL_1, task='detect')
 
 class LLMPlateReader:
     def __init__(self):
@@ -69,16 +74,40 @@ class LLMPlateReader:
 
 llm_reader = LLMPlateReader()
 
-# --- 1. Illumination (CLAHE) ---
+
+def context_heur_ad_gamma(image):
+    hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+    h, s, v = cv2.split(hsv)
+    
+    mean_v = np.mean(v)
+    std_v = np.std(v)
+    
+    if std_v > 60: return image
+        
+    if 80 <= mean_v <= 160: return image
+        
+    gamma = np.log(128.0 / 255.0) / np.log(mean_v / 255.0)
+    
+    gamma = np.clip(gamma, 0.6, 1.5) 
+    
+    inv_gamma = 1.0 / gamma
+    table = np.array([((i / 255.0) ** inv_gamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+    
+    v_gamma = cv2.LUT(v, table)
+    
+    return cv2.cvtColor(cv2.merge([h, s, v_gamma]), cv2.COLOR_HSV2BGR)
+
+
 def illumination_clahe(image):
     lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
     l, a, b = cv2.split(lab)
     clahe = cv2.createCLAHE(clipLimit=2.5, tileGridSize=(8, 8))
     cl = clahe.apply(l)
-    limg = cv2.merge((cl, a, b))
-    return cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
+    return cv2.cvtColor(cv2.merge((cl, a, b)), cv2.COLOR_LAB2BGR)
 
-# --- 2. Geometric Rectification ---
+def apply_nlm_denoise(image):
+    return cv2.fastNlMeansDenoisingColored(image, None, h=10, hColor=10, templateWindowSize=7, searchWindowSize=21)
+
 def order_points(pts):
     rect = np.zeros((4, 2), dtype="float32")
     s = pts.sum(axis=1)
@@ -87,89 +116,97 @@ def order_points(pts):
     rect[1], rect[3] = pts[np.argmin(diff)], pts[np.argmax(diff)]
     return rect
 
-def rotate_image(image, angle):
-    if abs(angle) < 0.5: return image
-    (h, w) = image.shape[:2]
-    center = (w // 2, h // 2)
-    M = cv2.getRotationMatrix2D(center, angle, 1.0)
-    return cv2.warpAffine(image, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-
-def geometric_rectification(roi):
+def apply_heur_3d_morph(roi):
     h, w = roi.shape[:2]
-    if h == 0 or w == 0: return roi
-    
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
     block_size = max(3, int(h * 0.35) | 1) 
     binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block_size, 10)
     
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    centroids_x, centroids_y = [], []
-    
-    for c in contours:
-        cx, cy, cw, ch = cv2.boundingRect(c)
-        aspect_ratio = cw / float(ch) if ch > 0 else 0
-        if ch > (h * 0.30) and 0.15 < aspect_ratio < 0.90:
-            centroids_x.append(cx + (cw // 2))
-            centroids_y.append(cy + (ch // 2))
-
-    tilt_angle = 0
-    if len(centroids_x) >= 4 and len(set(centroids_x)) > 1:
-        points = np.array(list(zip(centroids_x, centroids_y)), dtype=np.float32)
-        vx, vy, x, y = cv2.fitLine(points, cv2.DIST_L1, 0, 0.01, 0.01).flatten()
-        tilt_angle = np.degrees(np.arctan2(vy, vx))
-        
-        if tilt_angle < -45: tilt_angle += 180
-        if tilt_angle > 45: tilt_angle -= 180
-        if abs(tilt_angle) > 25: tilt_angle = 0 
-
-    leveled_roi = rotate_image(roi, tilt_angle)
-    
-    gray_leveled = cv2.cvtColor(leveled_roi, cv2.COLOR_BGR2GRAY)
-    binary_leveled = cv2.adaptiveThreshold(gray_leveled, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY_INV, block_size, 10)
-    
-    mask = np.zeros_like(binary_leveled)
-    mask[int(h * 0.25):int(h * 0.90), int(w * 0.05):int(w * 0.95)] = 255
-    binary_masked = cv2.bitwise_and(binary_leveled, mask)
+    mask = np.zeros_like(binary)
+    mask[int(h * 0.20):int(h * 0.90), int(w * 0.05):int(w * 0.95)] = 255
+    binary_masked = cv2.bitwise_and(binary, mask)
     
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 7))
     morphed = cv2.morphologyEx(binary_masked, cv2.MORPH_CLOSE, kernel)
     
-    contours_warp, _ = cv2.findContours(morphed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    contours, _ = cv2.findContours(morphed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours: return roi
     
-    if contours_warp:
-        largest_contour = max(contours_warp, key=cv2.contourArea)
-        blob_area = cv2.contourArea(largest_contour)
+    largest_contour = max(contours, key=cv2.contourArea)
+    blob_area = cv2.contourArea(largest_contour)
+    if not (0.10 * (w * h) <= blob_area <= 0.60 * (w * h)): return roi
         
-        if not (0.10 * (w * h) <= blob_area <= 0.60 * (w * h)):
-            return leveled_roi
-            
-        hull = cv2.convexHull(largest_contour)
-        hull_area = cv2.contourArea(hull)
-        solidity = float(blob_area) / hull_area if hull_area > 0 else 0
+    hull = cv2.convexHull(largest_contour)
+    hull_area = cv2.contourArea(hull)
+    solidity = float(blob_area) / hull_area if hull_area > 0 else 0
+    if solidity < 0.45: return roi
         
-        if solidity < 0.45:
-            return leveled_roi
-            
-        rect = cv2.minAreaRect(largest_contour)
-        box = np.int32(cv2.boxPoints(rect))
-        ordered_pts = order_points(box)
-        
-        widthA = np.linalg.norm(ordered_pts[2] - ordered_pts[3])
-        widthB = np.linalg.norm(ordered_pts[1] - ordered_pts[0])
-        heightA = np.linalg.norm(ordered_pts[1] - ordered_pts[2])
-        heightB = np.linalg.norm(ordered_pts[0] - ordered_pts[3])
-        maxWidth = max(int(widthA), int(widthB))
-        maxHeight = max(int(heightA), int(heightB))
-        
-        if maxHeight > 0 and (1.5 <= (maxWidth / maxHeight) <= 6.0):
-            bx, by, bw, bh = cv2.boundingRect(ordered_pts)
-            dst = np.array([[bx, by], [bx + bw, by], [bx + bw, by + bh], [bx, by + bh]], dtype="float32")
-            M = cv2.getPerspectiveTransform(ordered_pts, dst)
-            return cv2.warpPerspective(leveled_roi, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
-            
-    return leveled_roi
+    rect = cv2.minAreaRect(largest_contour)
+    box = np.int32(cv2.boxPoints(rect))
+    ordered_pts = order_points(box)
+    
+    bx, by, bw, bh = cv2.boundingRect(ordered_pts)
+    dst_pts = np.array([[bx, by], [bx + bw, by], [bx + bw, by + bh], [bx, by + bh]], dtype="float32")
+    
+    M = cv2.getPerspectiveTransform(ordered_pts, dst_pts)
+    return cv2.warpPerspective(roi, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
 
-# --- 3. OCR & Sorting ---
+def smart_perspective_router(roi):
+    h, w = roi.shape[:2]
+    
+    scout_img = illumination_clahe(roi)
+    gray = cv2.cvtColor(scout_img, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    edges = cv2.Canny(blurred, 30, 150)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (15, 5))
+    closed = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel)
+    
+    contours, _ = cv2.findContours(closed, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not contours: return roi
+    
+    largest_contour = max(contours, key=cv2.contourArea)
+    if cv2.contourArea(largest_contour) < (w * h * 0.15): return roi
+    
+    epsilon = 0.05 * cv2.arcLength(largest_contour, True)
+    approx = cv2.approxPolyDP(largest_contour, epsilon, True)
+    
+    if len(approx) == 4:
+        ordered_pts = order_points(np.float32(approx.reshape(4, 2)))
+        
+        widthA = np.linalg.norm(ordered_pts[2] - ordered_pts[3]) 
+        widthB = np.linalg.norm(ordered_pts[1] - ordered_pts[0]) 
+        heightA = np.linalg.norm(ordered_pts[1] - ordered_pts[2]) 
+        heightB = np.linalg.norm(ordered_pts[0] - ordered_pts[3]) 
+        
+        minWidth, maxWidth = min(widthA, widthB), max(widthA, widthB)
+        minHeight, maxHeight = min(heightA, heightB), max(heightA, heightB)
+        
+        if minWidth == 0 or minHeight == 0: return roi
+        
+        width_ratio = maxWidth / minWidth
+        height_ratio = maxHeight / minHeight
+        max_foreshortening = max(width_ratio, height_ratio)
+        
+        dx = ordered_pts[1][0] - ordered_pts[0][0]
+        dy = ordered_pts[1][1] - ordered_pts[0][1]
+        angle = abs(np.degrees(np.arctan2(dy, dx)))
+        
+        if max_foreshortening > 1.15 or angle > 15.0:
+            bx, by, bw, bh = cv2.boundingRect(ordered_pts)
+            dst_pts = np.array([[bx, by], [bx + bw, by], [bx + bw, by + bh], [bx, by + bh]], dtype="float32")
+            
+            max_disp = np.max(np.linalg.norm(ordered_pts - dst_pts, axis=1))
+            if max_disp > (w * 0.25): return roi
+            
+            M = cv2.getPerspectiveTransform(ordered_pts, dst_pts)
+            return cv2.warpPerspective(roi, M, (w, h), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+            
+        elif max_foreshortening < 1.06 and angle < 5.0:
+            denoised_roi = apply_nlm_denoise(roi)
+            return apply_heur_3d_morph(denoised_roi)
+            
+    return roi
+
 def run_ocr(roi_img, model):
     roi_resized = cv2.resize(roi_img, (1020, 730), interpolation=cv2.INTER_CUBIC)
     
@@ -218,7 +255,6 @@ def run_ocr(roi_img, model):
             
     return final_text, max(confs), min(confs), len(final_text)
 
-# --- Metrics Helpers ---
 def create_stats_dict():
     return {'TP_Chars': 0, 'GT_Chars': 0, 'Det_Chars': 0, 'Total_Sim': 0.0, 'Total_Plates': 0}
 
@@ -243,20 +279,23 @@ def main():
         } for model_name in MODELS
     }
 
-    print(f"\n{Fore.CYAN}{'='*120}")
-    print(f"STARTING PIPELINE ABLATION BENCHMARK (DUAL OCR MODELS)")
-    print(f"{'='*120}{Style.RESET_ALL}\n")
+    print(f"\n{Fore.CYAN}{'='*130}")
+    ocr_mode_str = "DUAL OCR MODELS" if RUN_DUAL_OCR else "SINGLE OCR MODEL"
+    print(f"STARTING ULTIMATE PIPELINE VALIDATION BENCHMARK ({ocr_mode_str})")
+    print(f"{'='*130}{Style.RESET_ALL}\n")
 
     header = f"{'Img #':<5} | {'GT':<10} | {'Model':<7} | {'Raw':<9} | {'No Illum':<9} | {'No Skew':<9} | {'No LLM':<9} | {'Full':<9} | {'LLM Trig?':<9}"
     print(header)
-    print("-" * 120)
+    print("-" * 130)
 
     img_count = 0
     lpd_misses = 0
-    llm_triggers = {"OCR_1": 0, "OCR_2": 0}
+    llm_triggers = {m: 0 for m in MODELS}
     total_valid_plates = 0
 
-    model_refs = {"OCR_1": char_model_1, "OCR_2": char_model_2}
+    model_refs = {"OCR_2": char_model_2}
+    if RUN_DUAL_OCR:
+        model_refs["OCR_1"] = char_model_1
 
     for index, row in df.iterrows():
         img_filename = row['imagen']
@@ -295,26 +334,27 @@ def main():
 
         pipeline_results = []
         for roi in rois:
-            ill_roi = illumination_clahe(roi)
-            skew_roi_raw = geometric_rectification(roi)
-            skew_roi_ill = geometric_rectification(ill_roi)
+            
+            roi_ill_only = context_heur_ad_gamma(roi.copy())
+            roi_routed_raw = smart_perspective_router(roi.copy())
+            
+            roi_routed_then_ill = context_heur_ad_gamma(roi_routed_raw.copy())
 
             roi_metrics = {}
-            
             for m_name in MODELS:
                 model = model_refs[m_name]
                 
                 text_raw, _, _, _ = run_ocr(roi, model)
-                text_no_ill, _, _, _ = run_ocr(skew_roi_raw, model)
-                text_no_skew, _, _, _ = run_ocr(ill_roi, model)
-                text_no_llm, max_conf, min_conf, length = run_ocr(skew_roi_ill, model)
-                
+                text_no_ill, _, _, _ = run_ocr(roi_routed_raw, model)
+                text_no_skew, _, _, _ = run_ocr(roi_ill_only, model)
+                text_no_llm, max_conf, min_conf, length = run_ocr(roi_routed_then_ill, model)
+
                 final_text = text_no_llm
                 llm_triggered = False
                 
                 if length < MIN_CHARS_THRESHOLD or (length > 0 and min_conf < (max_conf * CONF_DROP_RATIO)):
                     llm_triggered = True
-                    llm_text = llm_reader.infer(skew_roi_ill)
+                    llm_text = llm_reader.infer(roi_routed_then_ill)
                     if llm_text: final_text = llm_text
                 
                 roi_metrics[m_name] = {
@@ -335,9 +375,7 @@ def main():
             best_sim, best_idx = -1.0, -1
             
             for d_idx, res in enumerate(pipeline_results):
-                sim1 = difflib.SequenceMatcher(None, gt_text, res["OCR_1"]["Full"]).ratio()
-                sim2 = difflib.SequenceMatcher(None, gt_text, res["OCR_2"]["Full"]).ratio()
-                max_sim = max(sim1, sim2)
+                max_sim = max([difflib.SequenceMatcher(None, gt_text, res[m]["Full"]).ratio() for m in MODELS])
                 if max_sim > best_sim:
                     best_sim, best_idx = max_sim, d_idx
                     
@@ -373,7 +411,7 @@ def main():
                 f_col = Fore.GREEN if difflib.SequenceMatcher(None, gt_text, m_data["Full"]).ratio() > 0.8 else Fore.RED
                 
                 print(f"{img_str:<5} | {gt_str:<10} | {Fore.YELLOW}{m_name:<7}{Style.RESET_ALL} | {m_data['Raw']:<9} | {m_data['No_Illum']:<9} | {m_data['No_Skew']:<9} | {m_data['No_LLM']:<9} | {f_col}{m_data['Full']:<9}{Style.RESET_ALL} | {llm_str:<9}")
-            print("-" * 120)
+            print("-" * 130)
 
     def print_ablation_table(model_name, cat_key, title):
         print(f"\n{title} METRICS")
@@ -394,7 +432,7 @@ def main():
             
             print(f"{color}{config:<15}{reset} | {s['Total_Plates']:<6} | {avg_sim:.4f}  | {prec:.4f}     | {rec:.4f}     | {f1:.4f}")
 
-    total_gts = stats["OCR_1"]["Full"]["Overall"]["Total_Plates"] + lpd_misses
+    total_gts = stats[MODELS[0]]["Full"]["Overall"]["Total_Plates"] + lpd_misses
 
     for m_name in MODELS:
         print("\n\n" + "#"*85)
