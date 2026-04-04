@@ -143,9 +143,9 @@ This will pull the model if it is not already installed. The fallback stage depe
 The BLPR dataset consists of four sub-datasets:
 | Dataset | Samples  | Type      | Description                                                                          |
 |---------|----------|-----------|--------------------------------------------------------------------------------------|
-| BLPR-A  | 3,550    | Real      | Street photos from La Paz with vehicle and license plate annotations.                |
+| [BLPR-A](https://universe.roboflow.com/bolivianlpdauzaetal/final-lpd)  | 3,550    | Real      | Street photos from La Paz with vehicle and license plate annotations.                |
 | BLPR-B  | 49,392   | Synthetic | Created in Blender with weather variations and angles from 30 degrees to 150 degrees.|
-| BLPR-C  | 1,374    | Real/Aug  | Individual plates for OCR training with class balancing.                             |
+| [BLPR-C](https://universe.roboflow.com/bolivianlpdauzaetal/final-lpd)  | 1,374    | Real/Aug  | Individual plates for OCR training with class balancing.                             |
 | BLPR-D  | 499      | Real      | Validation dataset with luminance (lux) data and real perspective conditions.        |
 
 ## Evaluation
