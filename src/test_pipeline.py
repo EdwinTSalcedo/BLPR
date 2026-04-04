@@ -4,20 +4,23 @@ from ultralytics import YOLO
 import pandas as pd
 import os
 import difflib
+from pathlib import Path
 from colorama import Fore, Style, init
 
 from agno.agent import Agent
 from agno.models.ollama import Ollama
 from agno.media import Image as AgnoImage
 
-DATASET_FOLDER = 'dataset'
-LABELS_FILE = 'labels.csv' 
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DATASET_FOLDER = REPO_ROOT / "dataset"
+LABELS_FILE = "labels.csv"
 CONFIDENCE_THRESHOLD = 0.2
 IGNORED_STRINGS = ["BOLIVIA", "_"]
 
-CHAR_MODEL_1 = "best_lpr.pt"
-CHAR_MODEL_2 = "best_lpr_4.pt"
-PLATE_MODEL = "best_lpd.pt"
+MODELS_DIR = REPO_ROOT / "models"
+CHAR_MODEL_1 = MODELS_DIR / "best_lpr.pt"
+CHAR_MODEL_2 = MODELS_DIR / "best_lpr_4.pt"
+PLATE_MODEL = MODELS_DIR / "best_lpd.pt"
 
 MIN_CHARS_THRESHOLD = 6        
 CONF_DROP_RATIO = 0.70         
@@ -37,10 +40,14 @@ LLM_SYS_INSTRUCTIONS = [
 
 init(autoreset=True)
 
+if not CHAR_MODEL_2.exists():
+    print(f"{Fore.YELLOW}Optional OCR model not found at {CHAR_MODEL_2}. Falling back to {CHAR_MODEL_1}.{Style.RESET_ALL}")
+    CHAR_MODEL_2 = CHAR_MODEL_1
+
 print(f"{Fore.YELLOW}Loading YOLO Models...{Style.RESET_ALL}")
-plate_model = YOLO(PLATE_MODEL, task='detect') 
-char_model_1 = YOLO(CHAR_MODEL_1, task='detect')
-char_model_2 = YOLO(CHAR_MODEL_2, task='detect')
+plate_model = YOLO(str(PLATE_MODEL), task='detect')
+char_model_1 = YOLO(str(CHAR_MODEL_1), task='detect')
+char_model_2 = YOLO(str(CHAR_MODEL_2), task='detect')
 
 class LLMPlateReader:
     def __init__(self):
@@ -227,8 +234,8 @@ def get_matching_chars_count(s1, s2):
     return sum(n for i, j, n in matcher.get_matching_blocks())
 
 def main():
-    labels_path = os.path.join(DATASET_FOLDER, LABELS_FILE)
-    if not os.path.exists(labels_path):
+    labels_path = DATASET_FOLDER / LABELS_FILE
+    if not labels_path.exists():
         print(f"Error: Labels file not found at {labels_path}")
         return
     df = pd.read_csv(labels_path)
@@ -260,8 +267,8 @@ def main():
 
     for index, row in df.iterrows():
         img_filename = row['imagen']
-        img_path = os.path.join(DATASET_FOLDER, img_filename)
-        if not os.path.exists(img_path): continue
+        img_path = DATASET_FOLDER / img_filename
+        if not img_path.exists(): continue
 
         ground_truths = []
         angle_val = str(row.get('angle', 'UNKNOWN')).strip().upper()
@@ -275,7 +282,7 @@ def main():
         if not ground_truths: continue 
         img_count += 1
         
-        original_img = cv2.imread(img_path)
+        original_img = cv2.imread(str(img_path))
         plate_results = plate_model.predict(original_img, verbose=False, conf=0.5)
         
         rois = []
