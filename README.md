@@ -111,6 +111,21 @@ Before running the full pipeline, make sure the model is available locally:
 ollama run gemma3:4b
 ```
 
+### Demo pipeline
+
+Run the ALPR video demo with:
+
+
+```bash
+python demo_pipeline.py --input video.mp4 --output output.mp4 --plate-model models/best_lpd_licenseplate.pt --char-model models/best_lpr_5_characters.pt
+```
+
+The required model files are:
+
+- best_lpd_licenseplate.pt — License Plate Detection model
+- best_lpr_5_characters.pt — License Plate Recognition (OCR) model
+
+
 ## BLPR Dataset
 
 The BLPR dataset suite is designed to support detection, OCR, robustness evaluation, and synthetic-to-real adaptation for Bolivian plates.
