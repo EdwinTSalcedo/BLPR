@@ -10,10 +10,18 @@ import os
 import sys
 import time
 from collections import deque
+from pathlib import Path
 
 import cv2
 import numpy as np
 from ultralytics import YOLO
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+MODELS_DIR = REPO_ROOT / "models"
+DEFAULT_PLATE_MODEL = MODELS_DIR / "best_lpd.pt"
+DEFAULT_CHAR_MODEL = MODELS_DIR / "best_lpr.pt"
+DEFAULT_VIDEO_INPUT = REPO_ROOT / "data" / "videos" / "video.mp4"
+DEFAULT_VIDEO_OUTPUT = REPO_ROOT / "data" / "inference" / "videos" / "video.mp4"
 
 
 try:
@@ -60,7 +68,12 @@ try:
 except ImportError:
     SV_AVAILABLE = False
     logger.error("supervision not installed.")
-    logger.error("Run: pip install supervision")
+    logger.error('Run: python -m pip install "supervision>=0.25.1,<0.31"')
+    raise SystemExit(1)
+
+if not hasattr(sv, "ByteTrack"):
+    logger.error("This video pipeline requires supervision's ByteTrack API (removed in 0.31).")
+    logger.error('Run: python -m pip install "supervision>=0.25.1,<0.31"')
     raise SystemExit(1)
 
 try:
@@ -1171,13 +1184,13 @@ def parse_args():
     p = argparse.ArgumentParser(
         description="ALPR Video Demo – YOLO LPD + OCR + VLM fallback + ByteTrack (supervision)"
     )
-    p.add_argument("--input",         required=True,
-                   help="Input video file")
-    p.add_argument("--output",        default="output_alpr.mp4",
-                   help="Output video file (default: output_alpr.mp4)")
-    p.add_argument("--plate-model",   default="best_lpd_licenseplate.pt",
+    p.add_argument("--input",         default=str(DEFAULT_VIDEO_INPUT),
+                   help="Input video file (default: data/videos/video.mp4)")
+    p.add_argument("--output",        default=str(DEFAULT_VIDEO_OUTPUT),
+                   help="Output video file (default: data/inference/videos/video.mp4)")
+    p.add_argument("--plate-model",   default=str(DEFAULT_PLATE_MODEL),
                    help="LPD YOLO weights")
-    p.add_argument("--char-model",    default="best_lpr_5_characters.pt",
+    p.add_argument("--char-model",    default=str(DEFAULT_CHAR_MODEL),
                    help="Char OCR YOLO weights")
     p.add_argument("--conf",          type=float, default=0.15,
                    help="OCR confidence threshold (default: 0.15)")

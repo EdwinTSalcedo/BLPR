@@ -1,1 +1,6 @@
 docs/
+data/
+TODO.md
+models/best_lpr_5.pt
+# Generated annotated images
+/data/inference/

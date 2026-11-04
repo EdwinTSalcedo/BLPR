@@ -1,7 +1,8 @@
 <h1 align="center">BLPR: Robust License Plate Recognition under Viewpoint and Illumination Variations via Confidence-Driven VLM Fallback</h1>
 
+
 <p align="center">
-  <a href="https://arxiv.org/abs/2604.09927">
+  <a href="https://doi.org/10.1007/978-3-032-44179-9_28">
     <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper"></a>
   <a href="https://arxiv.org/abs/2604.09927">
     <img src="https://img.shields.io/badge/arXiv-2604.09927-b31b1b" alt="arXiv"></a>
@@ -71,20 +72,55 @@ conda activate blpr
 pip install -e .
 ```
 
+### VLM Fallback
+
+The fallback sends difficult plate crops to the image-capable Gemma 3 4B model through Ollama. Install Ollama first. On macOS or Linux, use the official installer command or download the macOS app from [ollama.com/download](https://ollama.com/download):
+
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+On Windows, download Ollama from [ollama.com/download](https://ollama.com/download) or run this in PowerShell:
+
+```powershell
+irm https://ollama.com/install.ps1 | iex
+```
+
+Start the Ollama service. On macOS or Windows, open the desktop app. On Linux, if the service is not already running, start it in a terminal:
+
+```bash
+ollama serve
+```
+
+`ollama serve` stays in the foreground, so leave that terminal open and use another terminal to download the model and confirm it is locally available:
+
+```bash
+ollama pull gemma3:4b
+ollama list
+```
+
+`ollama list` should show `gemma3:4b`. Keep the Ollama app or service running while using the pipelines below.
+
 ## Inference
 
-The evaluation pipeline is provided in `src/test_pipeline.py`. It runs plate detection, adaptive preprocessing, OCR, VLM fallback, and ablation reporting.
+`src/test_pipeline.py` runs plate detection, adaptive preprocessing, OCR, and VLM fallback on sample images. It saves annotated copies with plate bounding boxes, recognized text beside each box, and a summary in the top-left corner.
 
 Expected runtime layout:
 
 ```text
 BLPR/
-├── dataset/
-│   ├── labels.csv
-│   └── <evaluation_images>
+├── data/
+│   ├── pictures/
+│   │   ├── labels.csv
+│   │   └── <sample_images>
+│   ├── videos/
+│   │   └── video.mp4
+│   └── inference/            # generated outputs, ignored by Git
+│       ├── pictures/
+│       └── videos/
 ├── models/
 │   ├── best_lpd.pt
-│   └── <ocr_checkpoint>.pt
+│   └── best_lpr.pt
 └── src/
     └── test_pipeline.py
 ```
@@ -95,35 +131,20 @@ Run:
 python src/test_pipeline.py
 ```
 
-The script expects `dataset/labels.csv` to contain image names, ground-truth plate text, distance labels, and angle labels used for the ablation analysis. The `dataset/` directory is not committed to this repository. Model checkpoint paths are configured in `src/test_pipeline.py`.
+The script reads images from `data/pictures/` and recreates `data/inference/pictures/` with the annotated images on each run. It ignores `labels.csv` during inference; performance evaluation reads labels from `data/pictures/labels.csv`. Video inference writes to `data/inference/videos/` and preserves the picture outputs.
 
-### VLM Fallback
+Use `--data-dir PATH` and `--output-dir PATH` to select other folders, or `--no-vlm` to run OCR without Gemma.
 
-The fallback stage uses a local Ollama-compatible Gemma3 model:
+### Video demo pipeline
 
-```python
-LLM_GEMA_ID = "gemma3:4b"
-```
-
-Before running the full pipeline, make sure the model is available locally:
+The demo uses the same checkpoints as `test_pipeline.py`: `models/best_lpd.pt` for plate detection and `models/best_lpr.pt` for OCR. By default it reads `data/videos/video.mp4` and writes `data/inference/videos/video.mp4`; it creates the output folder automatically. Run:
 
 ```bash
-ollama run gemma3:4b
+python src/demo_pipeline.py --no-preview
 ```
 
-### Demo pipeline
+This disables the live preview window. Omit `--no-preview` to watch inference as it runs. Pass `--input PATH` or `--output PATH` to use different video paths.
 
-Run the ALPR video demo with:
-
-
-```bash
-python demo_pipeline.py --input video.mp4 --output output.mp4 --plate-model models/best_lpd_licenseplate.pt --char-model models/best_lpr_5_characters.pt
-```
-
-The required model files are:
-
-- best_lpd_licenseplate.pt — License Plate Detection model
-- best_lpr_5_characters.pt — License Plate Recognition (OCR) model
 
 
 ## BLPR Dataset
@@ -179,22 +200,46 @@ The VLM fallback is activated in 34.9% of evaluated cases, allowing the system t
 | RodoSol-ALPR | 0.7516 | 0.8228 |
 | BLPR-D | 0.8960 | 0.9102 |
 
+### Reproducing the performance evaluation
+
+`src/evaluate_performance.py` prints the evaluation tables and ablation analysis by comparing predictions with ground-truth plate text:
+
+```bash
+python src/evaluate_performance.py
+```
+
+The CSV and referenced images must be in the same folder. The CSV uses `imagen`, `plate1` through `plate5`, `distance1` through `distance5`, and `angle` for the evaluation. Use `--data-dir PATH` to evaluate another labeled dataset.
+
 ## Project Structure
 
 ```text
 BLPR/
+├── .gitignore
 ├── README.md
+├── TODO.md
 ├── LICENSE
 ├── pyproject.toml
 ├── requirements.txt
 ├── uv.lock
+├── data/                         # local data, ignored by Git
+│   ├── pictures/                 # sample images and labels.csv
+│   ├── videos/
+│   │   └── video.mp4
+│   └── inference/                # generated outputs, ignored by Git
+│       ├── pictures/             # annotated sample images
+│       └── videos/
+│           └── video.mp4         # annotated video
+├── docs/                         # paper source and supporting assets
 ├── images/
 │   └── pipeline.jpg
 ├── models/
 │   ├── best_lpd.pt
 │   └── best_lpr.pt
 └── src/
-    └── test_pipeline.py
+    ├── blpr_pipeline.py
+    ├── evaluate_performance.py
+    ├── test_pipeline.py
+    └── demo_pipeline.py
 ```
 
 ## Citation
@@ -202,12 +247,13 @@ BLPR/
 If you find this work useful, please cite:
 
 ```bibtex
-@misc{auzabanegas2026blpr,
-  title        = {BLPR: Robust License Plate Recognition under Viewpoint and Illumination Variations via Confidence-Driven VLM Fallback},
-  author       = {Auza Banegas, Guillermo J. and Calvimontes Vera, Diego A. and Condori Peredo, Natalia L. and Salcedo, Edwin and Castro Sandoval, Sergio S.},
-  year         = {2026},
-  eprint       = {2604.09927},
-  archivePrefix = {arXiv},
-  url          = {https://arxiv.org/abs/2604.09927}
+@inproceedings{AuzaBanegas2027BLPR,
+  title     = {BLPR: Robust License Plate Recognition Under Viewpoint and Illumination Variations via Confidence-Driven VLM Fallback},
+  author    = {Auza Banegas, Guillermo J. and others},
+  booktitle = {Advances in Soft Computing},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer},
+  year      = {2027},
+  doi       = {10.1007/978-3-032-44179-9_28}
 }
 ```
