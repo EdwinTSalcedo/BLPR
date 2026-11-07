@@ -4,3 +4,8 @@ TODO.md
 models/best_lpr_5.pt
 # Generated annotated images
 /data/inference/
+/face_anonymisation/models/*
+!/face_anonymisation/models/.gitkeep
+__pycache__/
+*.py[cod]
+.DS_Store

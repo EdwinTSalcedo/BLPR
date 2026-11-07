@@ -22,9 +22,9 @@
 
 BLPR is a modular License Plate Detection and Recognition (LPDR) framework designed for Bolivian license plates in unconstrained urban scenes. It targets two major sources of real-world failure: viewpoint distortion and illumination variation.
 
-The system combines a YOLO-based vehicle and plate detector, adaptive geometric rectification, illumination-aware photometric correction, YOLO-based character recognition, and a confidence-triggered Gemma3 4B vision-language model fallback for ambiguous cases. The framework is evaluated on the BLPR dataset suite, the first publicly available Bolivian LPDR dataset for academic research.
+The system combines a YOLO-based vehicle and plate detector, adaptive geometric rectification, illumination-aware photometric correction, YOLO-based character recognition, and a confidence-triggered Gemma3 4B vision-language model fallback for ambiguous cases. The framework is evaluated on the BLPR dataset suite, the first Bolivian LPDR dataset created for academic research. Dataset access is available to eligible researchers by request under the accompanying agreement.
 
-The latest preprint reports **89.6% character-level recognition accuracy** on real-world data.
+The final paper reports **89.51% Average Levenshtein Similarity** on the held-out BLPR-D evaluation subset.
 
 ## Contributions
 
@@ -37,17 +37,17 @@ The latest preprint reports **89.6% character-level recognition accuracy** on re
 
 <p align="center"><img src="./images/pipeline.jpg" width="90%" alt="BLPR pipeline"></p>
 
-The BLPR pipeline processes each input image as follows:
+The selected gamma range is 0.7–1.4. The following steps summarize the BLPR pipeline:
 
 1. **Vehicle and Plate Detection:** A YOLO26n detector locates cars and plates with a confidence threshold of 0.50. Plate detections are spatially validated against detected vehicles, then cropped with a 10-pixel margin.
 
-2. **Geometric Rectification:** A CLAHE-assisted contour scout estimates plate foreshortening and tilt. A homography is applied when the foreshortening ratio exceeds 1.05 or the tilt exceeds 10 degrees, subject to a 20% width guardrail to avoid severe interpolation artifacts.
+2. **Geometric Rectification:** A CLAHE-assisted contour scout estimates plate foreshortening and tilt. A homography is applied when the foreshortening ratio exceeds 1.20 or the tilt exceeds 12.5 degrees, subject to a 30% width guardrail. Low-distortion plates use denoising and morphological processing, while moderate cases are left unchanged.
 
-3. **Illumination Correction:** The ROI is converted to HSV and the Value channel is analyzed. Correction is skipped when contrast is already sufficient or brightness is balanced; otherwise, dynamic gamma correction is clamped between 0.6 and 1.5.
+3. **Illumination Correction:** The ROI is converted to HSV and the Value channel is analyzed. Correction is skipped when contrast exceeds 40 or mean brightness is between 80 and 160; otherwise, dynamic gamma correction is clamped between 0.7 and 1.4.
 
-4. **Character Recognition:** A YOLO26x OCR model detects individual characters at 1024 x 1024 resolution. Non-plate classes such as `BOLIVIA` and separator artifacts are filtered before sorting characters into the final text string.
+4. **Character Recognition:** A YOLO26x OCR model detects individual characters at 1024 × 1024 resolution. The `BOLIVIA` and separator classes are filtered out, characters are sorted into lines, and the upper-right department code is excluded from the final text.
 
-5. **VLM Fallback:** If fewer than six characters are detected, or if the minimum character confidence falls below 15% of the maximum character confidence, the preprocessed ROI is passed to a local Gemma3 4B model and constrained to return only alphanumeric plate text.
+5. **VLM Fallback:** If fewer than six characters are detected, or if the lowest character confidence is less than 15% of the highest, the preprocessed ROI is passed to a local Gemma3 4B model, which returns only the plate’s alphanumeric text.
 
 ## Installation
 
@@ -156,21 +156,29 @@ The BLPR dataset suite is designed to support detection, OCR, robustness evaluat
 | BLPR-A | 3,541 | Real street images | Vehicle and plate detection under La Paz street conditions, with car and plate annotations. |
 | BLPR-B | 49,392 | Synthetic Blender renders | Viewpoint, illumination, obstruction, and weather variation for detector pretraining. |
 | BLPR-C | 520 original / 1,374 balanced / 9,615 augmented | Real and augmented plate crops | Character-level OCR training with class balancing and geometric/noise augmentation. |
-| BLPR-D | 503 | Real validation images | Independent evaluation with plate text, lux, distance, and angle metadata. |
+| BLPR-D | 727 | Real street images | Calibration and held-out evaluation subsets with plate text; held-out data includes lux, distance, and angle metadata. |
 
-Dataset access is intended for academic research through a controlled-access process described by the project materials.
+## How to obtain the dataset
+
+The BLPR dataset is released for academic research only and is free to researchers from educational or research institutes for **non-commercial purposes**.
+
+To be able to download the dataset, please read carefully [**this license agreement**](./license-agreement.pdf), fill it out, and send it back to the first author ([e.r.salcedoaliaga@qmul.ac.uk](mailto:e.r.salcedoaliaga@qmul.ac.uk)). **Your e-mail must be sent from a valid university account** (.edu, .ac or similar).
+
+In general, you will receive a download link within 1-5 business days. If you do not receive it within this timeframe, please check your spam/junk folder. Failure to follow the instructions above may result in no response.
 
 ## Results
 
 ### Full BLPR Pipeline on BLPR-D
 
-| Pipeline | Average Similarity | Precision | Recall | F1 Score | Time |
+The paper reports the mean and standard deviation over 10 trials on 470 held-out BLPR-D evaluation instances; plates marked “Far” were excluded from this ablation.
+
+| Pipeline | Average Levenshtein Similarity | Precision | Recall | F1 Score | Time |
 |----------|--------------------|-----------|--------|----------|------|
-| BLPR | 0.8960 | 0.9102 | 0.8943 | 0.9022 | 402 ms |
+| BLPR (Ours) | 0.8951 ± 0.0010 | 0.9087 ± 0.0015 | 0.8935 ± 0.0010 | 0.9010 ± 0.0011 | 253.6 ± 0.002 ms |
 
-The VLM fallback is activated in 34.9% of evaluated cases, allowing the system to retain fast YOLO inference for easier plates while reserving Gemma3 for ambiguous samples.
+The VLM fallback was activated in 34.7% of cases, allowing the system to retain fast YOLO inference for easier plates while using Gemma3 for ambiguous samples.
 
-### Detection
+### Plate Detection on BLPR-A
 
 | Model | Precision | Recall | F1 Score | mAP@0.5 | mAP@0.5:0.95 | GFLOPs |
 |-------|-----------|--------|----------|---------|---------------|--------|
@@ -178,26 +186,27 @@ The VLM fallback is activated in 34.9% of evaluated cases, allowing the system t
 
 ### OCR
 
-| Model | Dataset | Average Similarity | Precision | Recall | F1 Score | Time |
+| Model | Dataset | Average Levenshtein Similarity | Precision | Recall | F1 Score | Time |
 |-------|---------|--------------------|-----------|--------|----------|------|
-| YOLO26x | BLPR-C | 0.9902 | 0.9862 | 0.9948 | 0.9904 | 18 ms |
-| YOLO26x | BLPR-D | 0.7266 | 0.9128 | 0.7132 | 0.8008 | 18 ms |
+| YOLO26x | BLPR-C test | 0.9902 | 0.9862 | 0.9948 | 0.9904 | 18 ms |
+| YOLO26x | BLPR-D calibration | 0.8046 | 0.9344 | 0.8039 | 0.8642 | 18 ms |
 
 ### Robustness Highlights
 
 | Condition | Raw F1 | BLPR F1 | Main Effect |
 |-----------|--------|---------|-------------|
-| Steep viewpoint | 0.5412 | 0.8807 | Selective rectification plus fallback substantially improves severe perspective cases. |
-| Low light | 0.5291 | 0.8915 | Photometric routing plus fallback improves difficult illumination cases. |
-| Tilted viewpoint | 0.9327 | 0.9413 | BLPR improves accuracy while avoiding unnecessary preprocessing. |
+| Steep viewpoint | 0.5412 | 0.8860 | Selective rectification plus fallback substantially improves severe perspective cases. |
+| Low light | 0.5291 | 0.8928 | Photometric routing plus fallback improves difficult illumination cases. |
+| Tilted viewpoint | 0.9324 | 0.9374 | BLPR improves accuracy while avoiding unnecessary preprocessing. |
 
 ### Zero-Shot Cross-Domain Evaluation
 
-| Dataset | Average Similarity | Precision |
+| Dataset | Average Levenshtein Similarity | Precision |
 |---------|--------------------|-----------|
-| SSIG-SegPlate | 0.7749 | 0.8139 |
-| UFPR-ALPR | 0.7693 | 0.8097 |
-| RodoSol-ALPR | 0.7516 | 0.8228 |
+| SSIG-SegPlate | 0.7796 | 0.7938 |
+| UFPR-ALPR | 0.7827 | 0.8752 |
+| AOLP | 0.8425 | 0.9569 |
+| RodoSol-ALPR | 0.7028 | 0.8389 |
 | BLPR-D | 0.8960 | 0.9102 |
 
 ### Reproducing the performance evaluation
@@ -218,6 +227,7 @@ BLPR/
 ├── README.md
 ├── TODO.md
 ├── LICENSE
+├── license-agreement.pdf
 ├── pyproject.toml
 ├── requirements.txt
 ├── uv.lock
@@ -229,7 +239,8 @@ BLPR/
 │       ├── pictures/             # annotated sample images
 │       └── videos/
 │           └── video.mp4         # annotated video
-├── docs/                         # paper source and supporting assets
+├── docs/                         # local paper files, ignored by Git
+├── face_anonymisation/           # face anonymisation and BLPR-D release tools
 ├── images/
 │   └── pipeline.jpg
 ├── models/
@@ -250,8 +261,10 @@ If you find this work useful, please cite:
 @inproceedings{AuzaBanegas2027BLPR,
   title     = {BLPR: Robust License Plate Recognition Under Viewpoint and Illumination Variations via Confidence-Driven VLM Fallback},
   author    = {Auza Banegas, Guillermo J. and others},
-  booktitle = {Advances in Soft Computing},
-  series    = {Lecture Notes in Computer Science},
+  booktitle = {MICAI 2026},
+  series    = {Lecture Notes in Artificial Intelligence},
+  volume    = {17150},
+  pages     = {458--484},
   publisher = {Springer},
   year      = {2027},
   doi       = {10.1007/978-3-032-44179-9_28}
