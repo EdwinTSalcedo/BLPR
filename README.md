@@ -9,7 +9,7 @@
   <a href="#blpr-dataset">
     <img src="https://img.shields.io/badge/Dataset-BLPR-blue" alt="Dataset"></a>
   <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-Apache%202.0-green" alt="License"></a>
+    <img src="https://img.shields.io/badge/License-Academic%20Research-blue" alt="Academic research license"></a>
 </p>
 
 <p align="center">
@@ -253,14 +253,22 @@ BLPR/
     └── demo_pipeline.py
 ```
 
+## License
+
+The [BLPR Academic Research License](./LICENSE) covers the project materials,
+including code, model weights, documentation, and images. It permits
+non-commercial academic research and education and requires citation of the
+paper for every reuse. The BLPR datasets are also subject to the separate
+[dataset agreement](./license-agreement.pdf).
+
 ## Citation
 
-If you find this work useful, please cite:
+For every reuse of BLPR project materials, cite:
 
 ```bibtex
 @inproceedings{AuzaBanegas2027BLPR,
   title     = {BLPR: Robust License Plate Recognition Under Viewpoint and Illumination Variations via Confidence-Driven VLM Fallback},
-  author    = {Auza Banegas, Guillermo J. and others},
+  author    = {Auza Banegas, Guillermo J. and Calvimontes Vera, Diego A. and Condori Peredo, Natalia L. and Salcedo, Edwin and Castro Sandoval, Sergio S.},
   booktitle = {MICAI 2026},
   series    = {Lecture Notes in Artificial Intelligence},
   volume    = {17150},

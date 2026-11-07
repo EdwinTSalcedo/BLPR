@@ -3,6 +3,8 @@ name = "implementations"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
+license = "LicenseRef-BLPR-Academic-1.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.13"
 dependencies = [
     "agno>=2.4.7",

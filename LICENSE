@@ -1,35 +1,61 @@
-                                 Apache License
-                           Version 2.0, January 2004
-                        http://www.apache.org/licenses/
+BLPR Academic Research License, version 1.0
 
-   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+Copyright 2026 Universidad Catolica Boliviana San Pablo and
+Queen Mary University of London
 
-   [UNCHANGED — keep Sections 1–9 exactly as in the original Apache 2.0 text]
+1. Scope
 
-   END OF TERMS AND CONDITIONS
+This license covers the BLPR project materials made available by the copyright
+holders, including source code, scripts, software, configuration files,
+documentation, figures, images, trained model weights, datasets and
+annotations, in any format (the "Materials"). It applies only to rights that
+the copyright holders are entitled to grant.
 
-   APPENDIX: How to apply the Apache License to your work.
+2. Permitted use
 
-      To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "[]"
-      replaced with your own identifying information. (Don't include
-      the brackets!) The text should be enclosed in the appropriate
-      comment syntax for the file format. We also recommend that a
-      file or class name and description of purpose be included on the
-      same "printed page" as the copyright notice for easier
-      identification within third-party archives.
+Subject to this license, permission is granted to use, reproduce, modify and
+redistribute the Materials and modifications of them solely for non-commercial
+academic research and education. Commercial use and use for other purposes
+require prior written permission from the copyright holders. Permission
+requests can be sent to e.r.salcedoaliaga@qmul.ac.uk.
 
-   Copyright 2026 Universidad Catolica Boliviana San Pablo and
-   Queen Mary University of London
+3. Required citation and notices
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+Every reuse of the Materials or modifications of them must acknowledge the
+BLPR project and cite the following paper:
 
-       http://www.apache.org/licenses/LICENSE-2.0
+  Auza Banegas, G. J., Calvimontes Vera, D. A., Condori Peredo, N. L.,
+  Salcedo, E., and Castro Sandoval, S. S. (2027). BLPR: Robust License Plate
+  Recognition Under Viewpoint and Illumination Variations via Confidence-Driven
+  VLM Fallback. In Advances in Soft Computing, MICAI 2026, Lecture Notes in
+  Computer Science, vol. 17150, pp. 458-484. Springer.
+  https://doi.org/10.1007/978-3-032-44179-9_28
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+Include the citation in each publication, presentation, report, documentation,
+repository, or other material that describes, incorporates, or accompanies the
+reuse. If the reuse produces no such material, record the citation in the
+associated research or teaching records. Redistributed copies and modifications
+must retain this license, the copyright notice, and applicable attribution
+notices, and must identify any modifications made.
+
+4. BLPR datasets
+
+Access to and use of BLPR-A, BLPR-B, BLPR-C and BLPR-D are also subject to the
+BLPR Dataset License Agreement provided with the project. That agreement
+requires an approved request and signed agreement, and imposes additional
+conditions, including restrictions on modification and redistribution. Where
+its terms are more restrictive, those terms apply to the datasets. This license
+does not grant access to a dataset or waive those additional conditions.
+
+5. Other rights
+
+Third-party materials may be subject to their own terms; this license does not
+grant rights that the copyright holders cannot grant. Rights granted under
+another applicable license or agreement remain subject to its terms.
+
+6. Disclaimer
+
+The Materials are provided "AS IS", without warranties of any kind, express or
+implied. To the extent permitted by applicable law, the copyright holders are
+not liable for any claim, damages, or other liability arising from use of the
+Materials.
