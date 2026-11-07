@@ -1,4 +1,7 @@
 docs/
+# Generated inference outputs; keep the parent directory in the repository.
+/assets/inference/*
+!/assets/inference/.gitkeep
 TODO.md
 models/best_lpr_5.pt
 /face_anonymisation/models/*

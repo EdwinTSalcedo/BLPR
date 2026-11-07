@@ -126,7 +126,7 @@ BLPR/
 │   │   └── <sample_images>
 │   ├── videos/
 │   │   └── video.mp4
-│   └── inference/            # generated outputs
+│   └── inference/            # generated outputs, ignored by Git
 │       ├── pictures/
 │       └── videos/
 ├── models/
@@ -248,7 +248,7 @@ BLPR/
 │   ├── pictures/                 # sample images and labels.csv
 │   ├── videos/                   # input videos
 │   │   └── video.mp4
-│   └── inference/                # generated outputs
+│   └── inference/                # generated outputs, ignored by Git
 │       ├── pictures/             # annotated sample images
 │       └── videos/
 │           └── video.mp4         # annotated video
