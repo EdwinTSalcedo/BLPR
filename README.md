@@ -126,7 +126,7 @@ BLPR/
 │   │   └── <sample_images>
 │   ├── videos/
 │   │   └── video.mp4
-│   └── inference/            # generated outputs, ignored by Git
+│   └── inference/            # generated outputs
 │       ├── pictures/
 │       └── videos/
 ├── models/
@@ -245,10 +245,10 @@ BLPR/
 ├── assets/
 │   ├── animation/
 │   │   └── pipeline-animated.svg
-│   ├── pictures/                 # local sample images and labels.csv, ignored by Git
-│   ├── videos/                   # local input videos, ignored by Git
+│   ├── pictures/                 # sample images and labels.csv
+│   ├── videos/                   # input videos
 │   │   └── video.mp4
-│   └── inference/                # generated outputs, ignored by Git
+│   └── inference/                # generated outputs
 │       ├── pictures/             # annotated sample images
 │       └── videos/
 │           └── video.mp4         # annotated video

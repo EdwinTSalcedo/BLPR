@@ -1,7 +1,4 @@
 docs/
-/assets/pictures/
-/assets/videos/
-/assets/inference/
 TODO.md
 models/best_lpr_5.pt
 /face_anonymisation/models/*
