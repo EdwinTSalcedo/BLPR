@@ -49,17 +49,6 @@ The selected gamma range is 0.7–1.4. The following steps summarize the BLPR pi
 
 5. **VLM Fallback:** If fewer than six characters are detected, or if the lowest character confidence is less than 15% of the highest, the preprocessed ROI is passed to a local Gemma3 4B model, which returns only the plate’s alphanumeric text.
 
-The figure keeps the original [paper artwork](./scripts/pipeline.jpg) stationary
-and animates only the arrow shafts. Regenerate the self-contained SVG with:
-
-```bash
-python3 scripts/animate_pipeline.py
-```
-
-The script uses only the Python standard library. Add `--duration 1.2` to slow
-the arrows, or `--output /path/to/figure.svg` to save another copy. Open the SVG
-in a web browser to see the animation; it also respects reduced-motion settings.
-
 ## Installation
 
 ```bash
