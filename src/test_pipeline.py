@@ -114,11 +114,11 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--data-dir", type=Path, default=PICTURES_DIR,
-        help="Input image folder (default: data/pictures/; labels.csv is not required).",
+        help="Input image folder (default: assets/pictures/; labels.csv is not required).",
     )
     parser.add_argument(
         "--output-dir", type=Path, default=INFERENCE_PICTURES_DIR,
-        help="Annotated image folder, created if missing (default: data/inference/pictures/).",
+        help="Annotated image folder, created if missing (default: assets/inference/pictures/).",
     )
     parser.add_argument("--no-vlm", action="store_true", help="Run OCR without the Gemma fallback.")
     args = parser.parse_args(argv)

@@ -20,8 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 MODELS_DIR = REPO_ROOT / "models"
 DEFAULT_PLATE_MODEL = MODELS_DIR / "best_lpd.pt"
 DEFAULT_CHAR_MODEL = MODELS_DIR / "best_lpr.pt"
-DEFAULT_VIDEO_INPUT = REPO_ROOT / "data" / "videos" / "video.mp4"
-DEFAULT_VIDEO_OUTPUT = REPO_ROOT / "data" / "inference" / "videos" / "video.mp4"
+DEFAULT_VIDEO_INPUT = REPO_ROOT / "assets" / "videos" / "video.mp4"
+DEFAULT_VIDEO_OUTPUT = REPO_ROOT / "assets" / "inference" / "videos" / "video.mp4"
 
 
 try:
@@ -1185,9 +1185,9 @@ def parse_args():
         description="ALPR Video Demo – YOLO LPD + OCR + VLM fallback + ByteTrack (supervision)"
     )
     p.add_argument("--input",         default=str(DEFAULT_VIDEO_INPUT),
-                   help="Input video file (default: data/videos/video.mp4)")
+                   help="Input video file (default: assets/videos/video.mp4)")
     p.add_argument("--output",        default=str(DEFAULT_VIDEO_OUTPUT),
-                   help="Output video file (default: data/inference/videos/video.mp4)")
+                   help="Output video file (default: assets/inference/videos/video.mp4)")
     p.add_argument("--plate-model",   default=str(DEFAULT_PLATE_MODEL),
                    help="LPD YOLO weights")
     p.add_argument("--char-model",    default=str(DEFAULT_CHAR_MODEL),

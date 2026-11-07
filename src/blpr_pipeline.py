@@ -7,8 +7,8 @@ import cv2
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PICTURES_DIR = REPO_ROOT / "data" / "pictures"
-INFERENCE_DIR = REPO_ROOT / "data" / "inference"
+PICTURES_DIR = REPO_ROOT / "assets" / "pictures"
+INFERENCE_DIR = REPO_ROOT / "assets" / "inference"
 INFERENCE_PICTURES_DIR = INFERENCE_DIR / "pictures"
 MODELS_DIR = REPO_ROOT / "models"
 PLATE_MODEL = MODELS_DIR / "best_lpd.pt"

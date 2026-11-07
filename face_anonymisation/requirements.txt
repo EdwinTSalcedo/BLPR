@@ -1,8 +1,0 @@
-numpy>=1.23
-opencv-python>=4.8,<5
-Pillow>=9.5
-pillow-heif>=0.18
-tqdm>=4.65
-onnx>=1.14
-onnxruntime>=1.16
-insightface>=0.7.3

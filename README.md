@@ -35,7 +35,7 @@ The final paper reports **89.51% Average Levenshtein Similarity** on the held-ou
 
 ## Pipeline
 
-<p align="center"><img src="./images/pipeline.jpg" width="90%" alt="BLPR pipeline"></p>
+<p align="center"><img src="assets/animation/pipeline-animated.svg" width="90%" alt="BLPR pipeline with animated arrows"></p>
 
 The selected gamma range is 0.7–1.4. The following steps summarize the BLPR pipeline:
 
@@ -48,6 +48,17 @@ The selected gamma range is 0.7–1.4. The following steps summarize the BLPR pi
 4. **Character Recognition:** A YOLO26x OCR model detects individual characters at 1024 × 1024 resolution. The `BOLIVIA` and separator classes are filtered out, characters are sorted into lines, and the upper-right department code is excluded from the final text.
 
 5. **VLM Fallback:** If fewer than six characters are detected, or if the lowest character confidence is less than 15% of the highest, the preprocessed ROI is passed to a local Gemma3 4B model, which returns only the plate’s alphanumeric text.
+
+The figure keeps the original [paper artwork](./scripts/pipeline.jpg) stationary
+and animates only the arrow shafts. Regenerate the self-contained SVG with:
+
+```bash
+python3 scripts/animate_pipeline.py
+```
+
+The script uses only the Python standard library. Add `--duration 1.2` to slow
+the arrows, or `--output /path/to/figure.svg` to save another copy. Open the SVG
+in a web browser to see the animation; it also respects reduced-motion settings.
 
 ## Installation
 
@@ -109,7 +120,7 @@ Expected runtime layout:
 
 ```text
 BLPR/
-├── data/
+├── assets/
 │   ├── pictures/
 │   │   ├── labels.csv
 │   │   └── <sample_images>
@@ -131,13 +142,13 @@ Run:
 python src/test_pipeline.py
 ```
 
-The script reads images from `data/pictures/` and recreates `data/inference/pictures/` with the annotated images on each run. It ignores `labels.csv` during inference; performance evaluation reads labels from `data/pictures/labels.csv`. Video inference writes to `data/inference/videos/` and preserves the picture outputs.
+The script reads images from `assets/pictures/` and recreates `assets/inference/pictures/` with the annotated images on each run. It ignores `labels.csv` during inference; performance evaluation reads labels from `assets/pictures/labels.csv`. Video inference writes to `assets/inference/videos/` and preserves the picture outputs.
 
 Use `--data-dir PATH` and `--output-dir PATH` to select other folders, or `--no-vlm` to run OCR without Gemma.
 
 ### Video demo pipeline
 
-The demo uses the same checkpoints as `test_pipeline.py`: `models/best_lpd.pt` for plate detection and `models/best_lpr.pt` for OCR. By default it reads `data/videos/video.mp4` and writes `data/inference/videos/video.mp4`; it creates the output folder automatically. Run:
+The demo uses the same checkpoints as `test_pipeline.py`: `models/best_lpd.pt` for plate detection and `models/best_lpr.pt` for OCR. By default it reads `assets/videos/video.mp4` and writes `assets/inference/videos/video.mp4`; it creates the output folder automatically. Run:
 
 ```bash
 python src/demo_pipeline.py --no-preview
@@ -231,18 +242,21 @@ BLPR/
 ├── pyproject.toml
 ├── requirements.txt
 ├── uv.lock
-├── data/                         # local data, ignored by Git
-│   ├── pictures/                 # sample images and labels.csv
-│   ├── videos/
+├── assets/
+│   ├── animation/
+│   │   └── pipeline-animated.svg
+│   ├── pictures/                 # local sample images and labels.csv, ignored by Git
+│   ├── videos/                   # local input videos, ignored by Git
 │   │   └── video.mp4
 │   └── inference/                # generated outputs, ignored by Git
 │       ├── pictures/             # annotated sample images
 │       └── videos/
 │           └── video.mp4         # annotated video
 ├── docs/                         # local paper files, ignored by Git
-├── face_anonymisation/           # face anonymisation and BLPR-D release tools
-├── images/
-│   └── pipeline.jpg
+├── scripts/
+│   ├── animate_pipeline.py
+│   ├── pipeline.jpg
+│   └── face_anonymisation/       # face anonymisation and BLPR-D release tools
 ├── models/
 │   ├── best_lpd.pt
 │   └── best_lpr.pt

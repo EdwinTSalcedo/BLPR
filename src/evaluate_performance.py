@@ -43,7 +43,7 @@ def main(argv=None):
         "--data-dir",
         type=Path,
         default=PICTURES_DIR,
-        help="Folder containing labels.csv and the evaluation images (default: data/pictures/).",
+        help="Folder containing labels.csv and the evaluation images (default: assets/pictures/).",
     )
     args = parser.parse_args(argv)
     data_dir = args.data_dir.expanduser()
