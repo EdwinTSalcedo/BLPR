@@ -278,7 +278,7 @@ The images below show three example outputs from the BLPR inference pipeline.
 
 ## License
 
-The [BLPR Academic Research License](./LICENSE) covers the project materials, including code, model weights, documentation, and images. It permits non-commercial academic research and education and requires citation of the
+The [License](./LICENSE) covers the project materials, including code, model weights, documentation, and images. It permits non-commercial academic research and education and requires citation of the
 paper for every reuse. The BLPR datasets are also subject to the separate
 [dataset agreement](./license-agreement.pdf).
 
