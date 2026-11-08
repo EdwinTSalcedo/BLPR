@@ -1,43 +1,37 @@
 <h1 align="center">BLPR: Robust License Plate Recognition under Viewpoint and Illumination Variations via Confidence-Driven VLM Fallback</h1>
 
-
 <p align="center">
-  <a href="https://doi.org/10.1007/978-3-032-44179-9_28">
-    <img src="https://img.shields.io/badge/Paper-PDF-red" alt="Paper"></a>
-  <a href="https://arxiv.org/abs/2604.09927">
-    <img src="https://img.shields.io/badge/arXiv-2604.09927-b31b1b" alt="arXiv"></a>
-  <a href="#blpr-dataset">
-    <img src="https://img.shields.io/badge/Dataset-BLPR-blue" alt="Dataset"></a>
-  <a href="./LICENSE">
-    <img src="https://img.shields.io/badge/License-Academic%20Research-blue" alt="Academic research license"></a>
-</p>
-
-<p align="center">
-  A Bolivian license plate detection and recognition framework for real-world viewpoint and illumination variation.
+  <a href="https://doi.org/10.1007/978-3-032-44179-9_28"><img src="https://img.shields.io/badge/%F0%9F%93%8E%20Paper-PDF-red" alt="Paper" height="16"></a>
+  <a href="https://arxiv.org/abs/2604.09927"><img src="https://img.shields.io/badge/%F0%9F%93%8E%20arXiv-2604.09927-b31b1b" alt="arXiv" height="16"></a>
+  <a href="#blpr-dataset"><img src="https://img.shields.io/badge/%F0%9F%97%83%EF%B8%8F%20Dataset-BLPR-blue" alt="Dataset" height="16"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/%F0%9F%93%84%20License-Academic-blue" alt="License" height="16"></a>
 </p>
 
 **Authors:** [Guillermo J. Auza Banegas](https://www.linkedin.com/in/guillermo-a-358247253/), [Diego A. Calvimontes Vera](https://www.linkedin.com/in/calvimontes-diego/), [Natalia L. Condori Peredo](https://www.linkedin.com/in/natalia-condori-864520287/), [Edwin Salcedo](https://www.linkedin.com/in/edwinsalcedo), and [Sergio S. Castro Sandoval](https://www.linkedin.com/in/sergio-castro-sandoval-663a78347/)
 
-## Overview
 
-BLPR is a modular License Plate Detection and Recognition (LPDR) framework designed for Bolivian license plates in unconstrained urban scenes. It targets two major sources of real-world failure: viewpoint distortion and illumination variation.
-
-The system combines a YOLO-based vehicle and plate detector, adaptive geometric rectification, illumination-aware photometric correction, YOLO-based character recognition, and a confidence-triggered Gemma3 4B vision-language model fallback for ambiguous cases. The framework is evaluated on the BLPR dataset suite, the first Bolivian LPDR dataset created for academic research. Dataset access is available to eligible researchers by request under the accompanying agreement.
-
-The final paper reports **89.51% Average Levenshtein Similarity** on the held-out BLPR-D evaluation subset.
-
-## Contributions
-
-- **BLPR Dataset Suite:** Four datasets covering real street scenes, synthetic Blender renders, balanced OCR training data, and independent real-world validation data.
-- **Adaptive Preprocessing:** Geometric rectification and illumination correction are applied only when image-condition cues indicate that they are needed.
-- **Confidence-Driven VLM Fallback:** Gemma3 4B is selectively triggered when OCR confidence is low or fewer than six characters are detected.
-- **Robustness Evaluation:** Ablations report similarity, precision, recall, F1 score, fallback usage, and latency across viewpoint and illumination conditions.
-
-## Pipeline
+> 🎉🎉🎉 Our paper was presented at the 25th Mexican International Conference on Artificial Intelligence (MICAI), held in Chihuahua, Mexico 🇲🇽, from 2–6 November 2026.
 
 <p align="center"><img src="assets/animation/pipeline-animated.svg" width="90%" alt="BLPR pipeline with animated arrows"></p>
 
-The selected gamma range is 0.7–1.4. The following steps summarize the BLPR pipeline:
+<div align="center">
+<a href="#overview">Overview</a> | <a href="#pipeline">Pipeline</a> | <a href="#installation">Installation</a> | <a href="#inference">Inference</a> | <a href="#blpr-dataset">Dataset</a> | <a href="#results">Results</a> | <a href="#demo">Demo</a>
+</div>
+
+
+## Overview
+
+**BLPR** is a modular License Plate Detection and Recognition (LPDR) framework for Bolivian license plates in unconstrained urban environments, BLPR addresses two major challenges in real-world recognition: viewpoint distortion and illumination variation. The framework integrates YOLO-based vehicle and license plate detection, adaptive geometric rectification, illumination-aware photometric correction, YOLO-based character recognition, and a confidence-driven Gemma 3 4B vision-language model (VLM) fallback for ambiguous cases. It is evaluated on the BLPR dataset suite, the first Bolivian LPDR dataset developed for academic research, providing an open-source foundation for further research and practical applications.
+
+### Contributions
+
+- **BLPR Dataset Suite:** Four datasets spanning real street scenes, synthetic renders, balanced OCR training, and independent real-world validation.
+- **Condition-Aware OCR Pipeline:** Combines selective image correction with confidence-triggered VLM fallback.
+- **Robustness Evaluation:** Ablations across viewpoint and illumination conditions, measuring recognition performance, fallback usage, and latency.
+
+## Pipeline
+
+The BLPR pipeline consists of five steps:
 
 1. **Vehicle and Plate Detection:** A YOLO26n detector locates cars and plates with a confidence threshold of 0.50. Plate detections are spatially validated against detected vehicles, then cropped with a 10-pixel margin.
 
@@ -168,38 +162,48 @@ In general, you will receive a download link within 1-5 business days. If you do
 
 ## Results
 
-### Full BLPR Pipeline on BLPR-D
+The results below cover end-to-end recognition, detection and OCR performance, robustness under challenging conditions, and zero-shot evaluation across datasets.
 
-The paper reports the mean and standard deviation over 10 trials on 470 held-out BLPR-D evaluation instances; plates marked “Far” were excluded from this ablation.
+### End-to-End Recognition on BLPR-D
+
+On the 470-instance held-out BLPR-D evaluation set, the full pipeline achieved the results below. Plates marked “Far” were excluded. Values are reported as the mean ± standard deviation over 10 trials.
 
 | Pipeline | Average Levenshtein Similarity | Precision | Recall | F1 Score | Time |
 |----------|--------------------|-----------|--------|----------|------|
 | BLPR (Ours) | 0.8951 ± 0.0010 | 0.9087 ± 0.0015 | 0.8935 ± 0.0010 | 0.9010 ± 0.0011 | 253.6 ± 0.002 ms |
 
-The VLM fallback was activated in 34.7% of cases, allowing the system to retain fast YOLO inference for easier plates while using Gemma3 for ambiguous samples.
+The Gemma3 fallback was activated in 34.7% of cases, handling plates flagged as ambiguous by the OCR system.
 
 ### Plate Detection on BLPR-A
+
+On BLPR-A, the YOLO26n detector achieved the following results:
 
 | Model | Precision | Recall | F1 Score | mAP@0.5 | mAP@0.5:0.95 | GFLOPs |
 |-------|-----------|--------|----------|---------|---------------|--------|
 | YOLO26n | 0.923 | 0.889 | 0.906 | 0.979 | 0.782 | 5.4 |
 
-### OCR
+### OCR Performance
+
+YOLO26x was evaluated on the BLPR-C test set and the BLPR-D calibration set:
 
 | Model | Dataset | Average Levenshtein Similarity | Precision | Recall | F1 Score | Time |
 |-------|---------|--------------------|-----------|--------|----------|------|
 | YOLO26x | BLPR-C test | 0.9902 | 0.9862 | 0.9948 | 0.9904 | 18 ms |
 | YOLO26x | BLPR-D calibration | 0.8046 | 0.9344 | 0.8039 | 0.8642 | 18 ms |
 
-### Robustness Highlights
+### Robustness Under Challenging Conditions
+
+BLPR improves F1 in all three conditions shown below, with the largest gains under steep viewpoints and low light.
 
 | Condition | Raw F1 | BLPR F1 | Main Effect |
 |-----------|--------|---------|-------------|
-| Steep viewpoint | 0.5412 | 0.8860 | Selective rectification plus fallback substantially improves severe perspective cases. |
-| Low light | 0.5291 | 0.8928 | Photometric routing plus fallback improves difficult illumination cases. |
-| Tilted viewpoint | 0.9324 | 0.9374 | BLPR improves accuracy while avoiding unnecessary preprocessing. |
+| Steep viewpoint | 0.5412 | 0.8860 | Selective rectification and fallback improve recognition under severe perspective distortion. |
+| Low light | 0.5291 | 0.8928 | Photometric correction and fallback improve recognition in low-light conditions. |
+| Tilted viewpoint | 0.9324 | 0.9374 | BLPR gives a smaller improvement while avoiding unnecessary preprocessing. |
 
 ### Zero-Shot Cross-Domain Evaluation
+
+The table reports zero-shot performance across the listed datasets:
 
 | Dataset | Average Levenshtein Similarity | Precision |
 |---------|--------------------|-----------|
@@ -209,15 +213,15 @@ The VLM fallback was activated in 34.7% of cases, allowing the system to retain 
 | RodoSol-ALPR | 0.7028 | 0.8389 |
 | BLPR-D | 0.8960 | 0.9102 |
 
-### Reproducing the performance evaluation
+### Reproducing the Evaluation
 
-`src/evaluate_performance.py` prints the evaluation tables and ablation analysis by comparing predictions with ground-truth plate text:
+Run `src/evaluate_performance.py` to compare predictions with ground-truth plate text and print the evaluation tables and ablation analysis:
 
 ```bash
 python src/evaluate_performance.py
 ```
 
-The CSV and referenced images must be in the same folder. The CSV uses `imagen`, `plate1` through `plate5`, `distance1` through `distance5`, and `angle` for the evaluation. Use `--data-dir PATH` to evaluate another labeled dataset.
+Place the CSV and all referenced images in the same folder. The CSV must contain `imagen`, `plate1` through `plate5`, `distance1` through `distance5`, and `angle`. To evaluate another labeled dataset, pass its folder with `--data-dir PATH`.
 
 ## Project Structure
 
@@ -234,6 +238,10 @@ BLPR/
 ├── assets/
 │   ├── animation/
 │   │   └── pipeline-animated.svg
+│   ├── demo/                     # optimized inference examples shown below
+│   │   ├── IMG_20251111_135553.jpg
+│   │   ├── IMG_20251111_134644.jpg
+│   │   └── IMG_20251111_134513.jpg
 │   ├── pictures/                 # sample images and labels.csv
 │   ├── videos/                   # input videos
 │   │   └── video.mp4
@@ -245,7 +253,7 @@ BLPR/
 ├── scripts/
 │   ├── animate_pipeline.py
 │   ├── pipeline.jpg
-│   └── face_anonymisation/       # face anonymisation and BLPR-D release tools
+│   └── face_anonymisation/       # face anonymization and BLPR-D release tools
 ├── models/
 │   ├── best_lpd.pt
 │   └── best_lpr.pt
@@ -256,17 +264,27 @@ BLPR/
     └── demo_pipeline.py
 ```
 
+## Demo
+
+The images below show three example outputs from the BLPR inference pipeline.
+
+<table>
+  <tr>
+    <td><img src="assets/demo/IMG_20251111_135553.jpg"  width="100%"></td>
+    <td><img src="assets/demo/IMG_20251111_134644.jpg"  width="100%"></td>
+    <td><img src="assets/demo/IMG_20251111_134513.jpg"  width="100%"></td>
+  </tr>
+</table>
+
 ## License
 
-The [BLPR Academic Research License](./LICENSE) covers the project materials,
-including code, model weights, documentation, and images. It permits
-non-commercial academic research and education and requires citation of the
+The [BLPR Academic Research License](./LICENSE) covers the project materials, including code, model weights, documentation, and images. It permits non-commercial academic research and education and requires citation of the
 paper for every reuse. The BLPR datasets are also subject to the separate
 [dataset agreement](./license-agreement.pdf).
 
 ## Citation
 
-For every reuse of BLPR project materials, cite:
+If you find BLPR useful for your project, cite:
 
 ```bibtex
 @inproceedings{AuzaBanegas2027BLPR,
