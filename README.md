@@ -284,7 +284,7 @@ paper for every reuse. The BLPR datasets are also subject to the separate
 
 ## Citation
 
-If you find BLPR useful for your project, cite:
+If you find BLPR useful for your project, please cite our article:
 
 ```bibtex
 @inproceedings{AuzaBanegas2027BLPR,
